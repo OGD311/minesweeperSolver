@@ -185,7 +185,7 @@ while True:
         
     if any(-1 in row for row in grid):
         print("Mine hit! Game Over")
-        exit(0)
+        # exit(0)
     
     # printGrid()
     
@@ -194,7 +194,7 @@ while True:
     
     frame = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     cv2.imshow("Screenshot", frame)
-    if cv2.waitKey(100) & 0xFF == ord('q'):
+    if cv2.waitKey(50) & 0xFF == ord('q'):
         break
     
     if os.name == 'nt':
