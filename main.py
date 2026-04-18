@@ -10,14 +10,17 @@ import time
 import random
 import pyautogui
 
-gridSizeX = 31
-gridSizeY = 16
+gridSizeX = 8
+gridSizeY = 8
 gridSize = 20
 
 grid = [[None for i in range(gridSizeX)] for j in range(gridSizeY)]
 
-startPosX = 822
-startPosY = 407
+startPosX = 1052
+startPosY = 445
+
+restartX = 1135
+restartY = 630
 
 shouldClick = True
 
@@ -42,7 +45,7 @@ def colourToValue(color):
             return 2
         case (234, 51, 35):
             return 3
-        case (6, 6, 120):
+        case (0, 0, 118):
             return 4
         case (112, 19, 11):
             return 5
@@ -77,7 +80,22 @@ def findAdjacent(x, y):
         
     return positions
         
+  
+def restart():
+    global grid
+    grid = [[None for i in range(gridSizeX)] for j in range(gridSizeY)]
+
+    pyautogui.click(x=restartX, y=restartY, duration=0)
+    time.sleep(0.5)
+
+    global shouldClick
+    shouldClick = True
     
+    # Click randomly to start next round
+    x0 = random.randint(1, gridSizeX - 1) * gridSize
+    y0 = random.randint(1, gridSizeY - 1) * gridSize
+    pyautogui.click(startPosX + x0 + ((gridSize / 20) * 5), startPosY + y0 + ((gridSize / 20) * 5), duration=0)
+
 
 
 while True:
@@ -87,10 +105,7 @@ while True:
     # monitor = sct.monitors[1]
     sct_img = sct.grab(monitor)
 
-    img = Image.new("RGB", sct_img.size)
-
-    pixels = zip(sct_img.raw[2::4], sct_img.raw[1::4], sct_img.raw[::4])
-    img.putdata(list(pixels))
+    img = Image.frombytes("RGB", sct_img.size, sct_img.rgb)
     
     positions = {}
     
@@ -156,6 +171,37 @@ while True:
         draw.rectangle((x0, y0, x1, y1), outline=(255, 0, 0), width=2)
         
         
+    unsure_probabilities = {}
+    for key, value in positions.items():
+        x, y = key
+        if value is None or value == "FLAG" or value == 0:
+            continue
+        
+        adjacents = findAdjacent(x, y)
+        unknown_neighbors = {pos for pos, val in adjacents.items() if val is None and pos not in definiteBombs}
+        flagged_neighbors = {pos for pos, val in adjacents.items() if val == "FLAG" or pos in definiteBombs}
+
+        remaining_mines = value - len(flagged_neighbors)
+        if remaining_mines <= 0:
+            continue
+
+        for pos in unknown_neighbors:
+            prob = remaining_mines / len(unknown_neighbors)
+            if pos in unsure_probabilities:
+                unsure_probabilities[pos] = unsure_probabilities[pos] + prob
+            else:
+                unsure_probabilities[pos] = prob
+    
+    
+    for pos, prob in unsure_probabilities.items():
+        x0 = pos[0] * gridSize
+        y0 = pos[1] * gridSize
+        x1 = x0 + int(19 * gridSize / 20)
+        y1 = y0 + int(19 * gridSize / 20)
+        
+        draw.text((x0 + 2, y0), f"{float(max(min(round(prob, 2), 1), 0))}", fill=(255, 0, 0))
+        draw.rectangle((x0, y0, x1, y1), outline=(255, 165, 0), width=2)
+    
     safe_cells = set()
         
     for key, value in positions.items():
@@ -191,53 +237,11 @@ while True:
         if (shouldClick):
             pyautogui.click(startPosX + x0 + ((gridSize / 20) * 5), startPosY + y0 + ((gridSize / 20) * 5), duration=0)
     
-    unsure_probabilities = {}
-    for key, value in positions.items():
-        x, y = key
-        if value is None or value == "FLAG" or value == 0:
-            continue
-        
-        adjacents = findAdjacent(x, y)
-        unknown_neighbors = {pos for pos, val in adjacents.items() if val is None and pos not in definiteBombs and pos not in safe_cells}
-        flagged_neighbors = {pos for pos, val in adjacents.items() if val == "FLAG" or pos in definiteBombs}
-
-        remaining_mines = value - len(flagged_neighbors)
-        if remaining_mines <= 0:
-            continue
-
-        for pos in unknown_neighbors:
-            prob = remaining_mines / len(unknown_neighbors)
-            if pos in unsure_probabilities:
-                unsure_probabilities[pos] = unsure_probabilities[pos] + prob
-            else:
-                unsure_probabilities[pos] = prob
-    
-    
-    for pos, prob in unsure_probabilities.items():
+    if len(safe_cells) == 0 and len(unsure_probabilities) > 0 and shouldClick:
+        pos, prob = min(unsure_probabilities.items(), key=lambda item: item[1])
         x0 = pos[0] * gridSize
         y0 = pos[1] * gridSize
-        x1 = x0 + int(19 * gridSize / 20)
-        y1 = y0 + int(19 * gridSize / 20)
-        
-        draw.text((x0 + 2, y0), f"{float(max(min(round(prob, 2), 1), 0))}", fill=(255, 0, 0))
-        draw.rectangle((x0, y0, x1, y1), outline=(255, 165, 0), width=2)
-    
-    if len(safe_cells) == 0 and len(unsure_probabilities) > 0:
-        hasUnsureClicked = False
-        minProbClick = 0.2
-        while not hasUnsureClicked:
-            pos, prob = min(unsure_probabilities.items(), key=lambda item: item[1])
-            
-            if prob < minProbClick and shouldClick:
-                hasUnsureClicked = True
-                x0 = pos[0] * gridSize
-                y0 = pos[1] * gridSize
-                pyautogui.click(startPosX + x0 + ((gridSize / 20) * 5), startPosY + y0 + ((gridSize / 20) * 5), duration=0)
-                
-            minProbClick = minProbClick * 1.25
-            
-            if minProbClick >= 5:
-                hasUnsureClicked = True
+        pyautogui.click(startPosX + x0 + ((gridSize / 20) * 5), startPosY + y0 + ((gridSize / 20) * 5), duration=0)
                 
         
     if any(-1 in row for row in grid):
@@ -250,24 +254,14 @@ while True:
                 print(sample)
         shouldClick = False
         
-        grid = [[None for i in range(gridSizeX)] for j in range(gridSizeY)]
-
-        pyautogui.click(x=1250, y=760, duration=0)
-        time.sleep(0.5)
-
-        shouldClick = True
-        hasUnsureClicked = False
-        
-        
-        # Click randomly to start next round
-        x0 = random.randint(1, gridSizeX - 1) * gridSize
-        y0 = random.randint(1, gridSizeY - 1) * gridSize
-        pyautogui.click(startPosX + x0 + ((gridSize / 20) * 5), startPosY + y0 + ((gridSize / 20) * 5), duration=0)
-
+        restart()
         # print("\033c", end="")
         # exit(0)
     else:
         shouldClick = True
+        
+    if len(definiteBombs) == 0 and len(safe_cells) == 0 and len(unsure_probabilities) == 0:
+        restart()
     
     # printGrid()
 
@@ -277,4 +271,3 @@ while True:
     cv2.imshow("Screenshot", frame)
     if cv2.waitKey(5) & 0xFF == ord('q'):
         break
-    
