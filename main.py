@@ -10,11 +10,14 @@ import time
 
 import pyautogui
 
-gridSize = 16
+gridSizeX = 31
+gridSizeY = 16
+gridSize = 20
 
-grid = [[None for i in range(gridSize)] for j in range(gridSize)]
 
-startPosX = 972
+grid = [[None for i in range(gridSizeX)] for j in range(gridSizeY)]
+
+startPosX = 822
 startPosY = 407
 
 def printGrid():
@@ -75,7 +78,7 @@ def findAdjacent(x, y):
 while True:
     sct = mss()
     
-    monitor = {"top": startPosY, "left": startPosX, "width": gridSize * 20, "height": gridSize * 20}
+    monitor = {"top": startPosY, "left": startPosX, "width": gridSizeX *gridSize, "height": gridSizeY *gridSize}
     # monitor = sct.monitors[1]
     sct_img = sct.grab(monitor)
 
@@ -92,11 +95,11 @@ while True:
     pixels = img.load()
     for x in range(sct_img.width):
         for y in range(sct_img.height):
-            gridX = x // 20
-            gridY = y // 20
+            gridX = x //gridSize
+            gridY = y //gridSize
             
             
-            if (x % 20 == 0 and y % 20 == 0):
+            if (x %gridSize == 0 and y %gridSize == 0):
                 sample = img.getpixel((x + 11, y + 10))
                 
                 isClicked = img.getpixel((x + 15, y + 19)) != (123, 123, 123)
@@ -148,8 +151,8 @@ while True:
                 
     draw = ImageDraw.Draw(img)
     for bomb in definiteBombs:
-        x0 = bomb[0] * 20
-        y0 = bomb[1] * 20
+        x0 = bomb[0] *gridSize
+        y0 = bomb[1] *gridSize
         x1 = x0 + 19
         y1 = y0 + 19
         draw.rectangle((x0, y0, x1, y1), outline=(255, 0, 0), width=2)
