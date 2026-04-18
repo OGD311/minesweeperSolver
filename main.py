@@ -104,9 +104,9 @@ while True:
                 
                 isClicked = img.getpixel((x + 15, y + 19)) != (123, 123, 123)
                 
-                isFlagged = img.getpixel((x + 6, y + 6)) == (234, 51, 35)
+                isFlagged = img.getpixel((x + 6, y + 7)) == (234, 51, 35)
                 
-                if isFlagged:
+                if colourToValue(sample) == 0 and isFlagged:
                     positions[(gridX, gridY)] = "FLAG"
                 elif isClicked:
                     positions[(gridX, gridY)] = colourToValue(sample)
@@ -114,11 +114,11 @@ while True:
                     positions[(gridX, gridY)] = None
                 
                 # Center
-                img.putpixel((x + 11, y + 10), (0, 255, 0))
+                img.putpixel((x + int(11 * gridSize / 20), y + int(10 * gridSize / 20)), (0, 255, 0))
                 # Flag
-                img.putpixel((x + 6, y + 6), (0, 0, 255)) 
+                img.putpixel((x + int(6 * gridSize / 20), y + int(6 * gridSize / 20)), (0, 0, 255)) 
                 # Clicked
-                img.putpixel((x + 15, y + 19), (255, 0, 0))
+                img.putpixel((x + int(15 * gridSize / 20), y + int(19 * gridSize / 20)), (255, 0, 0))
                 
 
                 # draw = ImageDraw.Draw(img)
@@ -153,8 +153,8 @@ while True:
     for bomb in definiteBombs:
         x0 = bomb[0] *gridSize
         y0 = bomb[1] *gridSize
-        x1 = x0 + 19
-        y1 = y0 + 19
+        x1 = x0 + int(19 * gridSize / 20)
+        y1 = y0 + int(19 * gridSize / 20)
         draw.rectangle((x0, y0, x1, y1), outline=(255, 0, 0), width=2)
         
         
@@ -182,8 +182,8 @@ while True:
     for cell in safe_cells:
         x0 = cell[0]*20
         y0 = cell[1]*20
-        x1 = x0 + 19
-        y1 = y0 + 19
+        x1 = x0 + int(19 * gridSize / 20)
+        y1 = y0 + int(19 * gridSize / 20)
         draw.rectangle((x0, y0, x1, y1), outline=(0, 255, 0), width=2)
         
     if any(-1 in row for row in grid):
@@ -197,7 +197,7 @@ while True:
     
     frame = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     cv2.imshow("Screenshot", frame)
-    if cv2.waitKey(50) & 0xFF == ord('q'):
+    if cv2.waitKey(200) & 0xFF == ord('q'):
         break
     
     if os.name == 'nt':
