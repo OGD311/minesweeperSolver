@@ -20,6 +20,8 @@ grid = [[None for i in range(gridSizeX)] for j in range(gridSizeY)]
 startPosX = 822
 startPosY = 407
 
+shouldClick = True
+
 def printGrid():
     for row in grid:
         print(row)
@@ -45,6 +47,10 @@ def colourToValue(color):
             return 4
         case (112, 19, 11):
             return 5
+        case (44, 103, 103):
+            return 6
+        case (53, 121, 122):
+            return 7
         
         case _:
             return 0
@@ -89,10 +95,9 @@ while True:
     
     positions = {}
     
-    pyautogui.moveTo(startPosX, startPosY)
-    
 
     pixels = img.load()
+    pixelColours = set()
     for x in range(sct_img.width):
         for y in range(sct_img.height):
             gridX = x //gridSize
@@ -102,9 +107,11 @@ while True:
             if (x %gridSize == 0 and y %gridSize == 0):
                 sample = img.getpixel((x + 11, y + 10))
                 
-                isClicked = img.getpixel((x + 15, y + 19)) != (123, 123, 123)
+                pixelColours.add(sample)
                 
-                isFlagged = img.getpixel((x + 6, y + 7)) == (234, 51, 35)
+                isClicked = img.getpixel((x + int(15 * gridSize / 20), y + int(19 * gridSize / 20))) != (123, 123, 123)
+                
+                isFlagged = img.getpixel((x + int(6 * gridSize / 20), y + int(8 * gridSize / 20))) == (234, 51, 35)
                 
                 if colourToValue(sample) == 0 and isFlagged:
                     positions[(gridX, gridY)] = "FLAG"
@@ -116,18 +123,9 @@ while True:
                 # Center
                 img.putpixel((x + int(11 * gridSize / 20), y + int(10 * gridSize / 20)), (0, 255, 0))
                 # Flag
-                img.putpixel((x + int(6 * gridSize / 20), y + int(6 * gridSize / 20)), (0, 0, 255)) 
+                img.putpixel((x + int(6 * gridSize / 20), y + int(8 * gridSize / 20)), (0, 0, 255)) 
                 # Clicked
                 img.putpixel((x + int(15 * gridSize / 20), y + int(19 * gridSize / 20)), (255, 0, 0))
-                
-
-                # draw = ImageDraw.Draw(img)
-                # draw.text(
-                #     (x + 2, y),
-                #     f"{gridX},{gridY}",
-                #     fill=(255, 0, 0),
-                # )
-
     
     definiteBombs = set()
     
@@ -155,6 +153,7 @@ while True:
         y0 = bomb[1] *gridSize
         x1 = x0 + int(19 * gridSize / 20)
         y1 = y0 + int(19 * gridSize / 20)
+        
         draw.rectangle((x0, y0, x1, y1), outline=(255, 0, 0), width=2)
         
         
@@ -176,19 +175,36 @@ while True:
         if remaining_mines == 0:
             safe_cells.update(unknown_neighbors)
                     
-                    
-    
-    draw = ImageDraw.Draw(img)
+
     for cell in safe_cells:
-        x0 = cell[0]*20
-        y0 = cell[1]*20
+        x0 = cell[0]*gridSize
+        y0 = cell[1]*gridSize
         x1 = x0 + int(19 * gridSize / 20)
         y1 = y0 + int(19 * gridSize / 20)
+        
+        
         draw.rectangle((x0, y0, x1, y1), outline=(0, 255, 0), width=2)
         
+        
+    for cell in safe_cells:
+        x0 = cell[0]*gridSize
+        y0 = cell[1]*gridSize
+        if (shouldClick):
+            pyautogui.click(startPosX + x0 + ((gridSize / 20) * 5), startPosY + y0 + ((gridSize / 20) * 5), duration=0)
+    
+    
     if any(-1 in row for row in grid):
         print("Mine hit! Game Over")
+        for sample in pixelColours:
+            out = colourToValue(sample)
+            if (out == 0):
+                print(sample)
+            else:
+                print(out)
+        shouldClick = False
         # exit(0)
+    else:
+        shouldClick = True
     
     # printGrid()
 
@@ -196,10 +212,7 @@ while True:
     
     frame = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     cv2.imshow("Screenshot", frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(20) & 0xFF == ord('q'):
         break
     
-    if os.name == 'nt':
-        _ = os.system('cls')
-    else:
-        _ = os.system('clear')
+    print("\033c", end="") 
