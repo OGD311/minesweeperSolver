@@ -142,7 +142,6 @@ while True:
             flags = {k: v for k, v in adjacents.items() if v == "FLAG"}
 
             if value - len(flags) == len(unknown) and value - len(flags) > 0:
-                print(unknown)
                 definiteBombs.update(unknown.keys())
                 # print(f"{(key[0], key[1])}: {adjacents}")
                 
@@ -186,9 +185,9 @@ while True:
         
     if any(-1 in row for row in grid):
         print("Mine hit! Game Over")
-        # exit(0)
+        exit(0)
     
-    printGrid()
+    # printGrid()
     
     time.sleep(0.5)
     # img.show()
