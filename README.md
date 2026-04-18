@@ -9,3 +9,15 @@ You will have to manually click to first start (ie find a starting area) and als
 
 ### Exposed Grid:
 <img width="624" height="323" alt="image" src="https://github.com/user-attachments/assets/8fb07728-1264-4baa-9cae-2d93fe279b59" />
+
+
+## How to use
+I use `uv` as my package manager (highly recommend!).
+Once you install all packages, you will need to modify: 
+- `gridSizeX`
+- `gridSizeY`
+- `gridSize`
+- `startPosX`
+- `startPosY`
+
+I highly recommend [CardGamesIO](https://cardgames.io/minesweeper/) for using this. It was the site I used to develop and test this.
