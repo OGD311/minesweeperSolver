@@ -191,13 +191,12 @@ while True:
         # exit(0)
     
     # printGrid()
-    
-    time.sleep(0.5)
+
     # img.show()
     
     frame = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     cv2.imshow("Screenshot", frame)
-    if cv2.waitKey(200) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
     
     if os.name == 'nt':
